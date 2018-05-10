@@ -3,6 +3,8 @@ package com.luoye.phoneinfo;
 import android.Manifest;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.location.GnssStatus;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
@@ -17,36 +19,25 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.CellIdentityGsm;
 import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
-import android.telephony.CellInfoGsm;
-import android.telephony.CellInfoLte;
-import android.telephony.CellLocation;
-import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
-import android.telephony.cdma.CdmaCellLocation;
-import android.telephony.gsm.GsmCellLocation;
 import android.text.Html;
-import android.text.SpannableString;
-import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.luoye.phoneinfo.util.Utils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import rebus.permissionutils.AskAgainCallback;
 import rebus.permissionutils.FullCallback;
@@ -86,6 +77,190 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .ask(this);
+    }
+
+    private  void getInfo()
+    {
+        getPackageInfo();
+        getScreenInfo();
+        getTimeInfo();
+        getImeiInfo();
+        getMacAddrInfo();
+        getPropInfo();
+        getWifiInfo();
+        getBluetoothInfo();
+        getGpsInfo();
+        getBsInfo();
+    }
+
+    /**
+     * 获取包的信息
+     */
+    private void getPackageInfo(){
+        appendLine("---------------package--------------");
+        PackageManager packageManager=getPackageManager();
+        try {
+            PackageInfo packageInfo=packageManager.getPackageInfo(getPackageName(),0);
+            appendLine("apk:"+packageInfo.applicationInfo.sourceDir);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取屏幕的信息
+     */
+    private void getScreenInfo(){
+        appendLine("---------------screen--------------");
+        DisplayMetrics dm = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int screenWidth = dm.widthPixels;
+        int screenHeight = dm.heightPixels;
+        appendLine("分辨率："+screenHeight+","+screenWidth);
+    }
+
+    private  void getTimeInfo(){
+
+        appendLine("---------------time--------------");
+        appendLine("时间戳(1)："+System.currentTimeMillis());
+        appendLine("时间戳(2)："+ Calendar.getInstance().getTimeInMillis());
+        appendLine("时间戳(3)："+ new Date().getTime());
+        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateText=simpleDateFormat.format(new Date());
+        appendLine("具体时间："+dateText);
+    }
+
+    private  void getImeiInfo(){
+
+        textView.append("---------------IMEI--------------\n");
+        textView.append("imei(0):"+telephonyManager.getImei(0)+"\n");
+        textView.append("imei(1):"+telephonyManager.getImei(1)+"\n");
+    }
+
+    private  void getMacAddrInfo(){
+
+        textView.append("---------------MAC Address--------------\n");
+        try {
+
+            Enumeration<NetworkInterface> enumeration=
+                    NetworkInterface.getNetworkInterfaces();
+            while(enumeration.hasMoreElements()) {
+                NetworkInterface networkInterface=enumeration.nextElement();
+                byte[] macBytes =networkInterface.getHardwareAddress();
+
+                if(macBytes==null//||!networkInterface.getName().equals("wlan0")
+                        )
+                    continue;
+                String mac="";
+                String mb="";
+                for (byte b:macBytes){
+                    mac+=String.format("%2X:",b);
+                    mb+=(b+":");
+                }
+                textView.append(networkInterface.getName()+"-MAC:"+mac.substring(0,mac.length()-1)+"\n");
+                //textView.append(networkInterface.getName()+"-mb:"+mb+"\n");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            textView.append(e.toString());
+        }
+    }
+
+    private  void getPropInfo(){
+        textView.append("---------------Prop--------------\n");
+        textView.append("ro.build.id:"+ Build.ID+"\n");
+        textView.append("ro.build.display.id:"+ Build.DISPLAY+"\n");
+        textView.append("ro.build.fingerprint:"+ Build.FINGERPRINT+"\n");
+        textView.append("ro.serialno:"+ Build.SERIAL+"\n");
+        textView.append("ro.product.brand:"+ Build.BRAND+"\n");
+        textView.append("ro.product.name:"+ Build.PRODUCT+"\n");
+        textView.append("ro.product.device:"+ Build.DEVICE+"\n");
+        textView.append("ro.product.board:"+ Build.BOARD+"\n");
+        textView.append("ro.product.model:"+ Build.MODEL+"\n");
+        textView.append("ro.product.manufacturer:"+ Build.MANUFACTURER+"\n");
+        appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
+        appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
+        appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
+        appendLine("Build.getRadioVersion(基带版本):"+ Html.fromHtml(Build.getRadioVersion()));
+        appendLine("getLine1Number:"+ telephonyManager.getLine1Number());
+        appendLine("manufacturer(中间层):"+ getProperties("ro.product.manufacturer"));
+        appendLine("ro.hardware:"+ Build.HARDWARE);
+    }
+
+    private  void getWifiInfo(){
+        textView.append("---------------WIFI--------------\n");
+        WifiInfo wifiInfo=wifiManager.getConnectionInfo();
+        textView.append("MAC:"+ wifiInfo.getMacAddress()+"\n");
+        textView.append("BSSID:"+ wifiInfo.getBSSID()+"\n");
+        textView.append("SSID:"+ wifiInfo.getSSID()+"\n");
+        textView.append("IP:"+ Utils.int2Ip(wifiInfo.getIpAddress())+"\n");
+    }
+
+    private  void getBluetoothInfo(){
+        appendLine("---------------蓝牙--------------");
+        appendLine(""+bluetoothManager.getAdapter().getAddress());
+    }
+
+    private  void getGpsInfo(){
+        textView.append("---------------GPS--------------\n");
+
+        Location location =locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+        int idx=0;
+
+        //locationManager.addNmeaListener(onNmeaMessageListener);
+        //locationManager.registerGnssStatusCallback(gnssCallback);
+        if(location==null)
+        {
+            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+                textView.append("开始GPS定位...\n");
+                try {
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 100, mLocationListener);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+            else if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+                textView.append("开始网络定位...\n");
+                try {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 100, mLocationListener);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+            else if(locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER))
+            {
+                textView.append("开始PASSIVE定位...\n");
+                try {
+                    locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 500, 100, mLocationListener);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+            else{
+                textView.append("\n");
+            }
+
+
+        }else{
+            textView.append("经度(Longitude):"+location.getLongitude()+"\n");
+            textView.append("纬度(Latitude):"+location.getLatitude()+"\n");
+        }
+    }
+
+    private  void getBsInfo(){
+        appendLine("---------------基站--------------");
+        appendLine("NetworkCountryIso:" +telephonyManager.getNetworkCountryIso());
+        appendLine("NetworkOperator:" +telephonyManager.getNetworkOperator());
+        appendLine("NetworkOperatorName:" +telephonyManager.getNetworkOperatorName());
+        appendLine("NetworkType:" +telephonyManager.getNetworkType()+",0(未知)");
+        appendLine("DataState:" +telephonyManager.getDataState());
+        appendLine("SimCountryIso:" +telephonyManager.getSimCountryIso());
+        appendLine("SimOperator:" +telephonyManager.getSimOperator());
+        appendLine("SimOperatorName:" +telephonyManager.getSimOperatorName());
+        appendLine("PhoneType:" +telephonyManager.getPhoneType());
     }
 
     /**
@@ -148,138 +323,6 @@ public class MainActivity extends AppCompatActivity {
     private  void appendLine(String text){
         textView.append(text+"\n");
     }
-
-    private  void getInfo()
-    {
-        textView.append("时间戳(1)："+System.currentTimeMillis()+"\n");
-        textView.append("时间戳(2)："+ Calendar.getInstance().getTimeInMillis()+"\n");
-        textView.append("时间戳(3)："+ new Date().getTime()+"\n");
-        textView.append("---------------IMEI--------------\n");
-        textView.append("imei(0):"+telephonyManager.getImei(0)+"\n");
-        textView.append("imei(1):"+telephonyManager.getImei(1)+"\n");
-        textView.append("---------------MAC Address--------------\n");
-        try {
-
-            Enumeration<NetworkInterface> enumeration=
-                    NetworkInterface.getNetworkInterfaces();
-            while(enumeration.hasMoreElements()) {
-                 NetworkInterface networkInterface=enumeration.nextElement();
-                 byte[] macBytes =networkInterface.getHardwareAddress();
-
-                 if(macBytes==null//||!networkInterface.getName().equals("wlan0")
-                         )
-                     continue;
-                 String mac="";
-                 String mb="";
-                 for (byte b:macBytes){
-                     mac+=String.format("%2X:",b);
-                     mb+=(b+":");
-                 }
-                textView.append(networkInterface.getName()+"-MAC:"+mac.substring(0,mac.length()-1)+"\n");
-                //textView.append(networkInterface.getName()+"-mb:"+mb+"\n");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            textView.append(e.toString());
-        }
-        textView.append("---------------Prop--------------\n");
-        textView.append("ro.build.id:"+ Build.ID+"\n");
-        textView.append("ro.build.display.id:"+ Build.DISPLAY+"\n");
-        textView.append("ro.build.fingerprint:"+ Build.FINGERPRINT+"\n");
-        textView.append("ro.serialno:"+ Build.SERIAL+"\n");
-        textView.append("ro.product.brand:"+ Build.BRAND+"\n");
-        textView.append("ro.product.name:"+ Build.PRODUCT+"\n");
-        textView.append("ro.product.device:"+ Build.DEVICE+"\n");
-        textView.append("ro.product.board:"+ Build.BOARD+"\n");
-        textView.append("ro.product.model:"+ Build.MODEL+"\n");
-        textView.append("ro.product.manufacturer:"+ Build.MANUFACTURER+"\n");
-        appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
-        appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
-        appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
-        appendLine("Build.getRadioVersion(基带版本):"+ Html.fromHtml("<font color='red'>"+Build.getRadioVersion()+"</font>"));
-        appendLine("getLine1Number:"+ telephonyManager.getLine1Number());
-        appendLine("manufacturer（中间层）:"+ getProperties("ro.product.manufacturer"));
-
-        textView.append("---------------WIFI--------------\n");
-        WifiInfo wifiInfo=wifiManager.getConnectionInfo();
-        textView.append("MAC:"+ wifiInfo.getMacAddress()+"\n");
-        textView.append("BSSID:"+ wifiInfo.getBSSID()+"\n");
-        textView.append("SSID:"+ wifiInfo.getSSID()+"\n");
-        textView.append("IP:"+ Utils.int2Ip(wifiInfo.getIpAddress())+"\n");
-        appendLine("---------------蓝牙--------------");
-        appendLine(""+bluetoothManager.getAdapter().getAddress());
-        textView.append("---------------GPS--------------\n");
-
-        Location location =locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-
-        int idx=0;
-
-        //locationManager.addNmeaListener(onNmeaMessageListener);
-        //locationManager.registerGnssStatusCallback(gnssCallback);
-        if(location==null)
-        {
-            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-                textView.append("开始GPS定位...\n");
-                try {
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 100, mLocationListener);
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-            else if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
-                textView.append("开始网络定位...\n");
-                try {
-                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 100, mLocationListener);
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-            else if(locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER))
-            {
-                textView.append("开始PASSIVE定位...\n");
-                try {
-                    locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 500, 100, mLocationListener);
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-            else{
-                textView.append("\n");
-            }
-
-
-        }else{
-            textView.append("经度："+location.getLongitude()+"\n");
-            textView.append("纬度："+location.getLatitude()+"\n");
-        }
-        appendLine("---------------基站--------------");
-
-
-        appendLine("基站" + ":NetworkCountryIso:" +telephonyManager.getNetworkCountryIso());
-        appendLine("基站" + ":NetworkOperator:" +telephonyManager.getNetworkOperator());
-        appendLine("基站" + ":NetworkOperatorName:" +telephonyManager.getNetworkOperatorName());
-        appendLine("基站" + ":NetworkType:" +telephonyManager.getNetworkType()+",0(未知)");
-        appendLine("基站" + ":SubscriberId:" +telephonyManager.getSubscriberId());
-        appendLine("基站" + ":DataState:" +telephonyManager.getDataState());
-        appendLine("基站" + ":SimCountryIso:" +telephonyManager.getSimCountryIso());
-        appendLine("基站" + ":SimOperator:" +telephonyManager.getSimOperator());
-        appendLine("基站" + ":SimOperatorName:" +telephonyManager.getSimOperatorName());
-        appendLine("基站" + ":PhoneType:" +telephonyManager.getPhoneType()+",TelephonyManager.PHONE_TYPE_CDMA");
-        List<CellInfo> cellInfos=telephonyManager.getAllCellInfo();
-//        for(CellInfo cellInfo:cellInfos){
-//            if(telephonyManager.getPhoneType()==TelephonyManager.PHONE_TYPE_CDMA) {
-//                CellInfoCdma cellInfoCdma = (CellInfoCdma) cellInfo;
-//                appendLine(cellInfoCdma.toString());
-//            }
-//            else if(telephonyManager.getPhoneType()==TelephonyManager.PHONE_TYPE_GSM){
-//                CellInfoLte cellInfoGsm = (CellInfoLte) cellInfo;
-//                appendLine(cellInfoGsm.toString());
-//            }
-//        }
-    }
-
 
     private  GnssStatus.Callback gnssCallback=new GnssStatus.Callback() {
         @Override
