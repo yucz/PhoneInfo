@@ -1,6 +1,7 @@
 package com.luoye.phoneinfo;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -22,12 +23,18 @@ import android.os.Bundle;
 import android.telephony.CellInfo;
 import android.telephony.TelephonyManager;
 import android.text.Html;
+import android.text.format.Formatter;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import com.luoye.phoneinfo.util.Utils;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.NetworkInterface;
@@ -91,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
         getBluetoothInfo();
         getGpsInfo();
         getBsInfo();
+        getMemInfo();
+        getCpuInfo();
     }
 
     /**
@@ -263,6 +272,61 @@ public class MainActivity extends AppCompatActivity {
         appendLine("PhoneType:" +telephonyManager.getPhoneType());
     }
 
+    private  void getMemInfo(){
+        appendLine("---------------内存--------------");
+        appendLine("可用:" +getSystemAvailableMemorySize());
+        appendLine("最大:" +getSystemTotalMemorySize());
+        appendLine("");
+        appendLine(readFile(new File("/proc/meminfo")));
+    }
+
+    private  void getCpuInfo(){
+        appendLine("---------------cpu--------------");
+        appendLine("处理器个数:" +Runtime.getRuntime().availableProcessors());
+        appendLine("");
+        appendLine(readFile(new File("/proc/cpuinfo")));
+    }
+
+
+    /**
+     * 最大内存
+     * @return
+     */
+    private String getSystemTotalMemorySize(){
+        //获得MemoryInfo对象
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo() ;
+        //获得系统可用内存，保存在MemoryInfo对象上
+        ActivityManager activityManager=(ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.getMemoryInfo(memoryInfo) ;
+        long memSize = memoryInfo.totalMem ;
+        //字符类型转换
+        String availMemStr = formatFileSize(memSize);
+
+        return availMemStr ;
+    }
+
+    /**
+     * 可用内存
+     * @return
+     */
+    private String getSystemAvailableMemorySize(){
+        //获得MemoryInfo对象
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo() ;
+        //获得系统可用内存，保存在MemoryInfo对象上
+        ActivityManager activityManager=(ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.getMemoryInfo(memoryInfo) ;
+        long memSize = memoryInfo.availMem ;
+        //字符类型转换
+        String availMemStr = formatFileSize(memSize);
+
+        return availMemStr ;
+    }
+
+    //调用系统函数，字符串转换 long -String KB/MB
+    private String formatFileSize(long size){
+        return Formatter.formatFileSize(MainActivity.this, size);
+    }
+
     /**
      * 中间层获取Properties
      * @param key
@@ -289,6 +353,30 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private  String readFile(File f){
+        BufferedReader fileReader=null;
+        StringBuilder stringBuilder=new StringBuilder();
+        try {
+            fileReader=new BufferedReader(new FileReader(f));
+            String line;
+            while ((line=fileReader.readLine())!=null){
+                stringBuilder.append(line+"\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if(fileReader!=null){
+                try {
+                    fileReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return  stringBuilder.toString();
     }
 
     /**
@@ -410,4 +498,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main_menu,menu);
         return super.onCreateOptionsMenu(menu);
     }
+
+
 }
