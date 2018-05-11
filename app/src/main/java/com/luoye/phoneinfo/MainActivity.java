@@ -28,6 +28,8 @@ import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.luoye.phoneinfo.util.Utils;
 
 import java.io.BufferedReader;
@@ -80,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 .callback(new FullCallback() {
                     @Override
                     public void result(ArrayList<PermissionEnum> permissionsGranted, ArrayList<PermissionEnum> permissionsDenied, ArrayList<PermissionEnum> permissionsDeniedForever, ArrayList<PermissionEnum> permissionsAsked) {
+                        toast("落叶制作");
                         getInfo();
                     }
                 })
@@ -499,5 +502,11 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-
+    private Toast toast;
+    private  void toast(CharSequence msg){
+        if(toast==null){
+            toast=Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT);
+        }
+        toast.show();
+    }
 }
