@@ -145,14 +145,14 @@ public class MainActivity extends AppCompatActivity {
 
     private  void getImeiInfo(){
 
-        textView.append("---------------IMEI--------------\n");
-        textView.append("imei(0):"+telephonyManager.getImei(0)+"\n");
-        textView.append("imei(1):"+telephonyManager.getImei(1)+"\n");
+        appendLine("---------------IMEI--------------");
+        appendLine("imei(0):"+telephonyManager.getImei(0));
+        appendLine("imei(1):"+telephonyManager.getImei(1));
     }
 
     private  void getMacAddrInfo(){
 
-        textView.append("---------------MAC Address--------------\n");
+        appendLine("---------------MAC Addr--------------");
         try {
 
             Enumeration<NetworkInterface> enumeration=
@@ -181,17 +181,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private  void getPropInfo(){
-        textView.append("---------------Prop--------------\n");
-        textView.append("ro.build.id:"+ Build.ID+"\n");
-        textView.append("ro.build.display.id:"+ Build.DISPLAY+"\n");
-        textView.append("ro.build.fingerprint:"+ Build.FINGERPRINT+"\n");
-        textView.append("ro.serialno:"+ Build.SERIAL+"\n");
-        textView.append("ro.product.brand:"+ Build.BRAND+"\n");
-        textView.append("ro.product.name:"+ Build.PRODUCT+"\n");
-        textView.append("ro.product.device:"+ Build.DEVICE+"\n");
-        textView.append("ro.product.board:"+ Build.BOARD+"\n");
-        textView.append("ro.product.model:"+ Build.MODEL+"\n");
-        textView.append("ro.product.manufacturer:"+ Build.MANUFACTURER+"\n");
+        appendLine("---------------Prop--------------");
+        appendLine("ro.build.id:"+ Build.ID);
+        appendLine("ro.build.display.id:"+ Build.DISPLAY);
+        appendLine("ro.build.fingerprint:"+ Build.FINGERPRINT);
+        appendLine("ro.serialno:"+ Build.SERIAL);
+        appendLine("ro.product.brand:"+ Build.BRAND);
+        appendLine("ro.product.name:"+ Build.PRODUCT);
+        appendLine("ro.product.device:"+ Build.DEVICE);
+        appendLine("ro.product.board:"+ Build.BOARD);
+        appendLine("ro.product.model:"+ Build.MODEL);
+        appendLine("ro.product.manufacturer:"+ Build.MANUFACTURER);
         appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
         appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
         appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
@@ -202,12 +202,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private  void getWifiInfo(){
-        textView.append("---------------WIFI--------------\n");
         WifiInfo wifiInfo=wifiManager.getConnectionInfo();
-        textView.append("MAC:"+ wifiInfo.getMacAddress()+"\n");
-        textView.append("BSSID:"+ wifiInfo.getBSSID()+"\n");
-        textView.append("SSID:"+ wifiInfo.getSSID()+"\n");
-        textView.append("IP:"+ Utils.int2Ip(wifiInfo.getIpAddress())+"\n");
+        appendLine("---------------WIFI--------------");
+        appendLine("MAC:"+ wifiInfo.getMacAddress());
+        appendLine("BSSID:"+ wifiInfo.getBSSID());
+        appendLine("SSID:"+ wifiInfo.getSSID());
+        appendLine("IP:"+ Utils.int2Ip(wifiInfo.getIpAddress()));
     }
 
     private  void getBluetoothInfo(){
@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private  void getGpsInfo(){
-        textView.append("---------------GPS--------------\n");
+        appendLine("---------------GPS--------------");
 
         Location location =locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
         if(location==null)
         {
             if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-                textView.append("开始GPS定位...\n");
+                appendLine("开始GPS定位...");
                 try {
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 100, mLocationListener);
                 }catch(Exception e){
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             else if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
-                textView.append("开始网络定位...\n");
+                appendLine("开始网络定位...");
                 try {
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 100, mLocationListener);
                 }catch(Exception e){
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else if(locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER))
             {
-                textView.append("开始PASSIVE定位...\n");
+                appendLine("开始PASSIVE定位...");
                 try {
                     locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 500, 100, mLocationListener);
                 }catch(Exception e){
@@ -252,13 +252,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             else{
-                textView.append("\n");
+                appendLine("");
             }
 
 
         }else{
-            textView.append("经度(Longitude):"+location.getLongitude()+"\n");
-            textView.append("纬度(Latitude):"+location.getLatitude()+"\n");
+            appendLine("经度(Longitude):"+location.getLongitude());
+            appendLine("纬度(Latitude):"+location.getLatitude());
         }
     }
 
@@ -454,23 +454,23 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLocationChanged(Location location) {
 
-            textView.append("经度："+location.getLongitude()+"\n");
-            textView.append("纬度："+location.getLatitude()+"\n");
+            appendLine("经度："+location.getLongitude());
+            appendLine("纬度："+location.getLatitude());
         }
 
         @Override
         public void onStatusChanged(String s, int i, Bundle bundle) {
-            textView.append("onStatusChanged："+s+"\n");
+            appendLine("onStatusChanged："+s);
         }
 
         @Override
         public void onProviderEnabled(String s) {
-            textView.append("onProviderEnabled："+s+"\n");
+            appendLine("onProviderEnabled："+s);
         }
 
         @Override
         public void onProviderDisabled(String s) {
-            textView.append("onProviderDisabled："+s+"\n");
+            appendLine("onProviderDisabled："+s);
         }
     };
 
@@ -506,6 +506,9 @@ public class MainActivity extends AppCompatActivity {
     private  void toast(CharSequence msg){
         if(toast==null){
             toast=Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT);
+        }
+        else{
+            toast.setText(msg);
         }
         toast.show();
     }
