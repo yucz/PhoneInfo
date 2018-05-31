@@ -300,21 +300,6 @@ public class MainActivity extends AppCompatActivity {
         appendLine("");
         appendLine(readFile(new File("/proc/cpuinfo")));
     }
-    private  class GLBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(OpenGLRenderer.ACTION_GL_INFO)){
-                appendLine("---------------OpenGL--------------");
-                appendLine(
-                        intent.getStringExtra("GL_RENDERER")+"\n"+
-                                intent.getStringExtra("GL_VENDOR")+"\n"+
-                                intent.getStringExtra("GL_VERSION")+"\n"+
-                                intent.getStringExtra("GL_EXTENSIONS")+"\n"
-
-                );
-            }
-        }
-    }
 
     /**
      * 最大内存
@@ -443,6 +428,24 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
+    private  class GLBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(OpenGLRenderer.ACTION_GL_INFO)){
+                appendLine("---------------OpenGL--------------");
+                appendLine(
+                        "GL_RENDERER：\n"+intent.getStringExtra("GL_RENDERER")+"\n\n"+
+                                "GL_VENDOR：\n"+intent.getStringExtra("GL_VENDOR")+"\n\n"+
+                                "GL_VERSION：\n"+intent.getStringExtra("GL_VERSION")+"\n\n"+
+                                "GL_EXTENSIONS：\n"+intent.getStringExtra("GL_EXTENSIONS")+"\n"
+
+                );
+            }
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
