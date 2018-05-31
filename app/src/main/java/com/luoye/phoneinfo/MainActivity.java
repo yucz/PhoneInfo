@@ -1,14 +1,14 @@
 package com.luoye.phoneinfo;
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.GnssStatus;
-import android.location.GpsSatellite;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -20,7 +20,6 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.CellInfo;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.format.Formatter;
@@ -30,11 +29,13 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.luoye.phoneinfo.activity.GLActivity;
+import com.luoye.phoneinfo.gl.GLSurfaceViewDemo;
+import com.luoye.phoneinfo.gl.OpenGLRenderer;
 import com.luoye.phoneinfo.util.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -45,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 
 import rebus.permissionutils.AskAgainCallback;
@@ -60,16 +60,22 @@ public class MainActivity extends AppCompatActivity {
     private  LocationManager locationManager;
     private WifiManager wifiManager;
     private BluetoothManager bluetoothManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        init();
+    }
+
+    private  void init(){
         textView = (TextView) findViewById(R.id.tv);
         textView.setText("");
         telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         locationManager=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
         wifiManager=(WifiManager)getSystemService(Context.WIFI_SERVICE);
         bluetoothManager=(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
+        registerReceiver(new GLBroadcastReceiver(),new IntentFilter(OpenGLRenderer.ACTION_GL_INFO));
         PermissionManager.Builder()
                 .permission(PermissionEnum.READ_PHONE_STATE,PermissionEnum.ACCESS_FINE_LOCATION,PermissionEnum.ACCESS_COARSE_LOCATION)
                 .askAgain(true)
@@ -103,7 +109,9 @@ public class MainActivity extends AppCompatActivity {
         getBsInfo();
         getMemInfo();
         getCpuInfo();
+        getProperties();
     }
+
 
     /**
      * 获取包的信息
@@ -197,8 +205,11 @@ public class MainActivity extends AppCompatActivity {
         appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
         appendLine("Build.getRadioVersion(基带版本):"+ Html.fromHtml(Build.getRadioVersion()));
         appendLine("getLine1Number:"+ telephonyManager.getLine1Number());
-        appendLine("manufacturer(中间层):"+ getProperties("ro.product.manufacturer"));
+        appendLine("manufacturer(中间层):"+ getNativeProperties("ro.product.manufacturer"));
         appendLine("ro.hardware:"+ Build.HARDWARE);
+        appendLine("cpu_abi:"+ Build.CPU_ABI);
+        appendLine("cpu_abi2:"+ Build.CPU_ABI2);
+        appendLine("ro.board.platform:"+getNativeProperties("ro.board.platform"));
     }
 
     private  void getWifiInfo(){
@@ -289,7 +300,21 @@ public class MainActivity extends AppCompatActivity {
         appendLine("");
         appendLine(readFile(new File("/proc/cpuinfo")));
     }
+    private  class GLBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(OpenGLRenderer.ACTION_GL_INFO)){
+                appendLine("---------------OpenGL--------------");
+                appendLine(
+                        intent.getStringExtra("GL_RENDERER")+"\n"+
+                                intent.getStringExtra("GL_VENDOR")+"\n"+
+                                intent.getStringExtra("GL_VERSION")+"\n"+
+                                intent.getStringExtra("GL_EXTENSIONS")+"\n"
 
+                );
+            }
+        }
+    }
 
     /**
      * 最大内存
@@ -331,11 +356,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * 获取Java Properties
+     * @return
+     */
+    private void getProperties() {
+        appendLine("---------------Java prop--------------");
+
+        Properties properties=System.getProperties();
+        Enumeration<?> em=properties.propertyNames();
+        for (; em.hasMoreElements();){
+            String key=(String)em.nextElement();
+            appendLine(key+"："+System.getProperty(key));
+        }
+    }
+    /**
      * 中间层获取Properties
      * @param key
      * @return
      */
-    private String getProperties(String key) {
+    private String getNativeProperties(String key) {
         try {
             Class clazz=Class.forName("android.os.SystemProperties");
             Method get=clazz.getDeclaredMethod("get",String.class);
@@ -357,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
-
     private  String readFile(File f){
         BufferedReader fileReader=null;
         StringBuilder stringBuilder=new StringBuilder();
@@ -477,9 +515,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        locationManager.removeUpdates(mLocationListener);
-        locationManager.removeNmeaListener(onNmeaMessageListener);
-        locationManager.unregisterGnssStatusCallback(gnssCallback);
+        if(locationManager!=null) {
+            locationManager.removeUpdates(mLocationListener);
+            locationManager.removeNmeaListener(onNmeaMessageListener);
+            locationManager.unregisterGnssStatusCallback(gnssCallback);
+        }
     }
 
     @Override
@@ -492,6 +532,10 @@ public class MainActivity extends AppCompatActivity {
             updateProperties();
             textView.setText("");
             getInfo();
+        }
+        else if(item.getItemId()==R.id.opengl){
+            Intent intent=new Intent(this, GLActivity.class);
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">手机信息</string>
+    <string name="open_gl">OpenGL</string>
 </resources>
