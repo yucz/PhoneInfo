@@ -30,6 +30,7 @@ public class GLActivity extends AppCompatActivity {
         if(actionBar!=null){
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        toast("返回主界面查看显卡信息");
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
