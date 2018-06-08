@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothManager=(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
         registerReceiver(new GLBroadcastReceiver(),new IntentFilter(OpenGLRenderer.ACTION_GL_INFO));
         PermissionManager.Builder()
-                .permission(PermissionEnum.READ_PHONE_STATE,PermissionEnum.ACCESS_FINE_LOCATION,PermissionEnum.ACCESS_COARSE_LOCATION)
+                .permission(PermissionEnum.READ_PHONE_STATE,PermissionEnum.ACCESS_FINE_LOCATION,PermissionEnum.ACCESS_COARSE_LOCATION,PermissionEnum.WRITE_EXTERNAL_STORAGE)
                 .askAgain(true)
                 .askAgainCallback(new AskAgainCallback() {
                     @Override
