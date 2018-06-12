@@ -20,7 +20,10 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.CellLocation;
 import android.telephony.TelephonyManager;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.gsm.GsmCellLocation;
 import android.text.Html;
 import android.text.format.Formatter;
 import android.util.DisplayMetrics;
@@ -106,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         getWifiInfo();
         getBluetoothInfo();
         getGpsInfo();
-        getBsInfo();
+        getBaseStationInfo();
         getMemInfo();
         getCpuInfo();
         getProperties();
@@ -273,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void getBsInfo(){
+    private  void getBaseStationInfo(){
         appendLine("---------------基站--------------");
         appendLine("NetworkCountryIso:" +telephonyManager.getNetworkCountryIso());
         appendLine("NetworkOperator:" +telephonyManager.getNetworkOperator());
@@ -284,6 +287,19 @@ public class MainActivity extends AppCompatActivity {
         appendLine("SimOperator:" +telephonyManager.getSimOperator());
         appendLine("SimOperatorName:" +telephonyManager.getSimOperatorName());
         appendLine("PhoneType:" +telephonyManager.getPhoneType());
+        CellLocation cel = telephonyManager.getCellLocation();
+        int phoneType = telephonyManager.getPhoneType();
+        //移动联通 GsmCellLocation
+        if (phoneType == TelephonyManager.PHONE_TYPE_GSM && cel instanceof GsmCellLocation) {
+            GsmCellLocation gsmCellLocation = (GsmCellLocation) cel;
+            appendLine("Cid:" +gsmCellLocation.getCid()+"  Lac:"+gsmCellLocation.getLac());
+
+        }
+        else if(phoneType == TelephonyManager.PHONE_TYPE_CDMA && cel instanceof CdmaCellLocation){
+            CdmaCellLocation cdmaCellLocation = (CdmaCellLocation) cel;
+            appendLine("基站Id:"+cdmaCellLocation.getBaseStationId());
+            appendLine("lat:" +cdmaCellLocation.getBaseStationLatitude()+"  long:"+cdmaCellLocation.getBaseStationLongitude());
+        }
     }
 
     private  void getMemInfo(){
