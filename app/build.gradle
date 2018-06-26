@@ -21,6 +21,11 @@ android {
             url 'http://dl.bintray.com/raphaelbussa/maven'
         }
     }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
 }
 
 dependencies {

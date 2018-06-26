@@ -33,6 +33,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.luoye.phoneinfo.activity.GLActivity;
+import com.luoye.phoneinfo.cpu.CpuBridge;
 import com.luoye.phoneinfo.gl.GLSurfaceViewDemo;
 import com.luoye.phoneinfo.gl.OpenGLRenderer;
 import com.luoye.phoneinfo.util.Utils;
@@ -111,10 +112,15 @@ public class MainActivity extends AppCompatActivity {
         getGpsInfo();
         getBaseStationInfo();
         getMemInfo();
+        getNativeCpuInfo();
         getCpuInfo();
         getProperties();
     }
-
+    private  void getNativeCpuInfo(){
+        appendLine("---------------cpu native--------------");
+        appendLine("cpu架构："+CpuBridge.getCpuStructure());
+        appendLine("cpu个数："+CpuBridge.getCpuCount());
+    }
 
     /**
      * 获取包的信息
@@ -226,7 +232,12 @@ public class MainActivity extends AppCompatActivity {
 
     private  void getBluetoothInfo(){
         appendLine("---------------蓝牙--------------");
-        appendLine(""+bluetoothManager.getAdapter().getAddress());
+        try {
+            appendLine("" + bluetoothManager.getAdapter().getAddress());
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private  void getGpsInfo(){
