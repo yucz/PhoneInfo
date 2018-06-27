@@ -9,7 +9,7 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             src/main/cpu/CpuJniBridge.c src/main/cpu/cpu-features.c)
+             src/main/cpu/CpuJniBridge.c  src/main/cpu/cpu-features.c)
 
 
 find_library(log-lib log)

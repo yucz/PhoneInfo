@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         appendLine("---------------cpu native--------------");
         appendLine("cpu架构："+CpuBridge.getCpuStructure());
         appendLine("cpu个数："+CpuBridge.getCpuCount());
-        appendLine("cpu特性："+CpuBridge.getCpuFeatures());
+        appendLine("cpuid："+CpuBridge.getCpuId());
         appendLine("cpu特性："+CpuBridge.getFeatures());
     }
 

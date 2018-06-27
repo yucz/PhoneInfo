@@ -13,22 +13,6 @@
 
 const char* TAG="cpu-info";
 
-//typedef uint8_t         jboolean;       /* unsigned 8 bits */
-//typedef int8_t          jbyte;          /* signed 8 bits */
-//typedef uint16_t        jchar;          /* unsigned 16 bits */
-//typedef int16_t         jshort;         /* signed 16 bits */
-//typedef int32_t         jint;           /* signed 32 bits */
-//typedef int64_t         jlong;          /* signed 64 bits */
-//typedef float           jfloat;         /* 32-bit IEEE 754 */
-//typedef double          jdouble;        /* 64-bit IEEE 754 */
-//typedef unsigned char   jboolean;       /* unsigned 8 bits */
-//typedef signed char     jbyte;          /* signed 8 bits */
-//typedef unsigned short  jchar;          /* unsigned 16 bits */
-//typedef short           jshort;         /* signed 16 bits */
-//typedef int             jint;           /* signed 32 bits */
-//typedef long long       jlong;          /* signed 64 bits */
-//typedef float           jfloat;         /* 32-bit IEEE 754 */
-//typedef double          jdouble;        /* 64-bit IEEE 754 */
 
 JNIEXPORT jstring
 JNICALL
@@ -58,7 +42,6 @@ Java_com_luoye_phoneinfo_cpu_CpuBridge_getCpuStructure(JNIEnv *env, jobject thiz
             break;
         default:
             return (*env)->NewStringUTF(env,"MAX");
-            break;
     }
 }
 JNIEXPORT jint
@@ -66,11 +49,24 @@ JNICALL
 Java_com_luoye_phoneinfo_cpu_CpuBridge_getCpuCount(JNIEnv *env, jobject thiz){
     return (jint)android_getCpuCount();
 }
+
 JNIEXPORT jint
 JNICALL
 Java_com_luoye_phoneinfo_cpu_CpuBridge_getCpuFeatures(JNIEnv *env, jobject thiz){
     uint64_t  val=android_getCpuFeatures();
-    int value=(int)val;
+    int value=val;
     return  value;
+}
 
+JNIEXPORT jint
+JNICALL
+Java_com_luoye_phoneinfo_cpu_CpuBridge_getCpuId(JNIEnv *env, jobject thiz){
+#ifdef __arm__
+    int cpuid=android_getCpuIdArm();
+#else
+    int cpuid=0;
+#endif
+
+    LOGD("%d",cpuid);
+    return  cpuid;
 }
