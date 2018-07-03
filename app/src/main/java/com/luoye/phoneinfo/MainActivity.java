@@ -8,8 +8,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.graphics.ImageFormat;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
@@ -41,7 +42,6 @@ import android.widget.Toast;
 
 import com.luoye.phoneinfo.activity.GLActivity;
 import com.luoye.phoneinfo.cpu.CpuBridge;
-import com.luoye.phoneinfo.gl.GLSurfaceViewDemo;
 import com.luoye.phoneinfo.gl.OpenGLRenderer;
 import com.luoye.phoneinfo.util.Utils;
 
@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 
 import rebus.permissionutils.AskAgainCallback;
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private WifiManager wifiManager;
     private BluetoothManager bluetoothManager;
     private CameraManager cameraManager;
-
+    private SensorManager sensorManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         wifiManager=(WifiManager)getSystemService(Context.WIFI_SERVICE);
         bluetoothManager=(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
         cameraManager=(CameraManager)getSystemService(Context.CAMERA_SERVICE);
+        sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
         registerReceiver(new GLBroadcastReceiver(),new IntentFilter(OpenGLRenderer.ACTION_GL_INFO));
         PermissionManager.Builder()
                 .permission(PermissionEnum.READ_PHONE_STATE,PermissionEnum.ACCESS_FINE_LOCATION,PermissionEnum.ACCESS_COARSE_LOCATION,PermissionEnum.WRITE_EXTERNAL_STORAGE)
@@ -102,36 +104,61 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void result(ArrayList<PermissionEnum> permissionsGranted, ArrayList<PermissionEnum> permissionsDenied, ArrayList<PermissionEnum> permissionsDeniedForever, ArrayList<PermissionEnum> permissionsAsked) {
                         toast("落叶制作");
-                        getInfo();
+                        printInfo();
                     }
                 })
                 .ask(this);
     }
 
-    private  void getInfo()
+    private  void printInfo()
     {
-        getPackageInfo();
-        getScreenInfo();
-        getTimeInfo();
-        getImeiInfo();
-        getMacAddrInfo();
-        getPropInfo();
-        getWifiInfo();
-        getBluetoothInfo();
-        getGpsInfo();
-        getBaseStationInfo();
-        getMemInfo();
-        getNativeCpuInfo();
-        getCpuInfo();
-        getProperties();
+        printPackageInfo();
+        printScreenInfo();
+        printTimeInfo();
+        printImeiInfo();
+        printMacAddrInfo();
+        printPropInfo();
+        printWifiInfo();
+        printBluetoothInfo();
+        printGpsInfo();
+        printBaseStationInfo();
+        printMemInfo();
+        printNativeCpuInfo();
+        printCpuInfo();
+        printProperties();
         try {
-            getCameraInfo();
+            printCameraInfo();
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+        printSensorInfo();
     }
 
-    private  void getCameraInfo() throws CameraAccessException{
+    /**
+     * 打印传感器信息
+     */
+    private  void printSensorInfo(){
+        appendLine("---------------Sensor--------------");
+        StringBuilder stringBuilder=new StringBuilder();
+        List<Sensor> sensorList=sensorManager.getSensorList(SensorManager.SENSOR_STATUS_NO_CONTACT);
+        for(int i=0;i<sensorList.size();i++){
+            Sensor sensor=sensorList.get(i);
+            if(i!=sensorList.size()-1) {
+                stringBuilder.append(sensor.getName() + "||");
+            }
+            else{
+                stringBuilder.append(sensor.getName());
+            }
+        }
+
+        appendLine(stringBuilder.toString());
+
+    }
+    /**
+     * 打印摄像头信息
+     * @throws CameraAccessException
+     */
+    private  void printCameraInfo() throws CameraAccessException{
         String[] cameraList=cameraManager.getCameraIdList();
 
         StringBuilder stringBuilder=new StringBuilder();
@@ -139,14 +166,19 @@ public class MainActivity extends AppCompatActivity {
         int idx=0;
         for(String camera:cameraList){
             CameraCharacteristics cameraCharacteristics=cameraManager.getCameraCharacteristics(camera);
+            Integer facing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
             StreamConfigurationMap streamConfigurationMap = (StreamConfigurationMap) cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             Size[] sizes=streamConfigurationMap.getOutputSizes(ImageFormat.JPEG);
-            stringBuilder.append("摄像头"+(++idx)+":"+sizes[0].getWidth()+"x"+sizes[0].getHeight()+"\n");
+            stringBuilder.append((facing==CameraCharacteristics.LENS_FACING_FRONT?"前置摄像头":"后置摄像头")+":"+sizes[0].getWidth()+"x"+sizes[0].getHeight()+"\n");
         }
         appendLine(stringBuilder.toString());
     }
-    private  void getNativeCpuInfo(){
-        appendLine("---------------cpu native--------------");
+
+    /**
+     * 底层获取cpu信息
+     */
+    private  void printNativeCpuInfo(){
+        appendLine("---------------CPU Native--------------");
         appendLine("cpu架构："+CpuBridge.getCpuStructure());
         appendLine("cpu个数："+CpuBridge.getCpuCount());
         appendLine("cpuid："+CpuBridge.getCpuId());
@@ -154,10 +186,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 获取包的信息
+     * 打印包的信息
      */
-    private void getPackageInfo(){
-        appendLine("---------------package--------------");
+    private void printPackageInfo(){
+        appendLine("---------------Package--------------");
         PackageManager packageManager=getPackageManager();
         try {
             PackageInfo packageInfo=packageManager.getPackageInfo(getPackageName(),0);
@@ -169,9 +201,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 获取屏幕的信息
+     * 打印屏幕的信息
      */
-    private void getScreenInfo(){
+    private void printScreenInfo(){
         appendLine("---------------screen--------------");
         DisplayMetrics dm = new DisplayMetrics();
         this.getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -180,9 +212,9 @@ public class MainActivity extends AppCompatActivity {
         appendLine("分辨率："+screenHeight+","+screenWidth);
     }
 
-    private  void getTimeInfo(){
+    private  void printTimeInfo(){
 
-        appendLine("---------------time--------------");
+        appendLine("---------------Time--------------");
         appendLine("时间戳(1)："+System.currentTimeMillis());
         appendLine("时间戳(2)："+ Calendar.getInstance().getTimeInMillis());
         appendLine("时间戳(3)："+ new Date().getTime());
@@ -191,16 +223,16 @@ public class MainActivity extends AppCompatActivity {
         appendLine("具体时间："+dateText);
     }
 
-    private  void getImeiInfo(){
+    private  void printImeiInfo(){
 
         appendLine("---------------IMEI--------------");
         appendLine("imei(0):"+telephonyManager.getImei(0));
         appendLine("imei(1):"+telephonyManager.getImei(1));
     }
 
-    private  void getMacAddrInfo(){
+    private  void printMacAddrInfo(){
 
-        appendLine("---------------MAC Addr--------------");
+        appendLine("---------------MAC--------------");
         try {
 
             Enumeration<NetworkInterface> enumeration=
@@ -228,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void getPropInfo(){
+    private  void printPropInfo(){
         appendLine("---------------Prop--------------");
         appendLine("ro.build.id:"+ Build.ID);
         appendLine("ro.build.display.id:"+ Build.DISPLAY);
@@ -252,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
         appendLine("ro.board.platform:"+getNativeProperties("ro.board.platform"));
     }
 
-    private  void getWifiInfo(){
+    private  void printWifiInfo(){
         WifiInfo wifiInfo=wifiManager.getConnectionInfo();
         appendLine("---------------WIFI--------------");
         appendLine("MAC:"+ wifiInfo.getMacAddress());
@@ -261,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
         appendLine("IP:"+ Utils.int2Ip(wifiInfo.getIpAddress()));
     }
 
-    private  void getBluetoothInfo(){
+    private  void printBluetoothInfo(){
         appendLine("---------------蓝牙--------------");
         try {
             appendLine("" + bluetoothManager.getAdapter().getAddress());
@@ -271,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void getGpsInfo(){
+    private  void printGpsInfo(){
         appendLine("---------------GPS--------------");
 
         Location location =locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -318,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void getBaseStationInfo(){
+    private  void printBaseStationInfo(){
         appendLine("---------------基站--------------");
         appendLine("NetworkCountryIso:" +telephonyManager.getNetworkCountryIso());
         appendLine("NetworkOperator:" +telephonyManager.getNetworkOperator());
@@ -344,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void getMemInfo(){
+    private  void printMemInfo(){
         appendLine("---------------内存--------------");
         appendLine("可用:" +getSystemAvailableMemorySize());
         appendLine("最大:" +getSystemTotalMemorySize());
@@ -352,8 +384,8 @@ public class MainActivity extends AppCompatActivity {
         appendLine(readFile(new File("/proc/meminfo")));
     }
 
-    private  void getCpuInfo(){
-        appendLine("---------------cpu--------------");
+    private  void printCpuInfo(){
+        appendLine("---------------CPU--------------");
         appendLine("处理器个数:" +Runtime.getRuntime().availableProcessors());
         appendLine("");
         appendLine(readFile(new File("/proc/cpuinfo")));
@@ -393,16 +425,18 @@ public class MainActivity extends AppCompatActivity {
         return availMemStr ;
     }
 
-    //调用系统函数，字符串转换 long -String KB/MB
+    /**
+     * 调用系统函数，字符串转换 long -String KB/MB
+     */
     private String formatFileSize(long size){
         return Formatter.formatFileSize(MainActivity.this, size);
     }
 
     /**
-     * 获取Java Properties
+     * 打印Java Properties
      * @return
      */
-    private void getProperties() {
+    private void printProperties() {
         appendLine("---------------Java prop--------------");
 
         Properties properties=System.getProperties();
@@ -587,12 +621,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==R.id.refresh){
             textView.setText("");
-            getInfo();
+            printInfo();
         }
         else if(item.getItemId()==R.id.refresh_prop){
             updateProperties();
             textView.setText("");
-            getInfo();
+            printInfo();
         }
         else if(item.getItemId()==R.id.opengl){
             Intent intent=new Intent(this, GLActivity.class);
