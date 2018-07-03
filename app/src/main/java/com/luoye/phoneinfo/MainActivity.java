@@ -8,6 +8,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
+import android.graphics.ImageFormat;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
@@ -27,6 +33,7 @@ import android.telephony.gsm.GsmCellLocation;
 import android.text.Html;
 import android.text.format.Formatter;
 import android.util.DisplayMetrics;
+import android.util.Size;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -64,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private  LocationManager locationManager;
     private WifiManager wifiManager;
     private BluetoothManager bluetoothManager;
+    private CameraManager cameraManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         locationManager=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
         wifiManager=(WifiManager)getSystemService(Context.WIFI_SERVICE);
         bluetoothManager=(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
+        cameraManager=(CameraManager)getSystemService(Context.CAMERA_SERVICE);
         registerReceiver(new GLBroadcastReceiver(),new IntentFilter(OpenGLRenderer.ACTION_GL_INFO));
         PermissionManager.Builder()
                 .permission(PermissionEnum.READ_PHONE_STATE,PermissionEnum.ACCESS_FINE_LOCATION,PermissionEnum.ACCESS_COARSE_LOCATION,PermissionEnum.WRITE_EXTERNAL_STORAGE)
@@ -115,6 +124,26 @@ public class MainActivity extends AppCompatActivity {
         getNativeCpuInfo();
         getCpuInfo();
         getProperties();
+        try {
+            getCameraInfo();
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private  void getCameraInfo() throws CameraAccessException{
+        String[] cameraList=cameraManager.getCameraIdList();
+
+        StringBuilder stringBuilder=new StringBuilder();
+        appendLine("---------------Camera--------------");
+        int idx=0;
+        for(String camera:cameraList){
+            CameraCharacteristics cameraCharacteristics=cameraManager.getCameraCharacteristics(camera);
+            StreamConfigurationMap streamConfigurationMap = (StreamConfigurationMap) cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Size[] sizes=streamConfigurationMap.getOutputSizes(ImageFormat.JPEG);
+            stringBuilder.append("摄像头"+(++idx)+":"+sizes[0].getWidth()+"x"+sizes[0].getHeight()+"\n");
+        }
+        appendLine(stringBuilder.toString());
     }
     private  void getNativeCpuInfo(){
         appendLine("---------------cpu native--------------");
