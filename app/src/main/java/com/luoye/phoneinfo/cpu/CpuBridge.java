@@ -1,7 +1,7 @@
 package com.luoye.phoneinfo.cpu;
 
 /**
- * Created by xiake on 18-6-26.
+ * Created by zyw on 18-6-26.
  */
 
 public class CpuBridge {

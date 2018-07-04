@@ -20,6 +20,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.OnNmeaMessageListener;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -287,10 +288,25 @@ public class MainActivity extends AppCompatActivity {
     private  void printWifiInfo(){
         WifiInfo wifiInfo=wifiManager.getConnectionInfo();
         appendLine("---------------WIFI--------------");
-        appendLine("MAC:"+ wifiInfo.getMacAddress());
-        appendLine("BSSID:"+ wifiInfo.getBSSID());
-        appendLine("SSID:"+ wifiInfo.getSSID());
-        appendLine("IP:"+ Utils.int2Ip(wifiInfo.getIpAddress()));
+        appendLine("MAC："+ wifiInfo.getMacAddress());
+        appendLine("ConnectionInfo BSSID：\n"+ wifiInfo.getBSSID());
+        appendLine("SSID："+ wifiInfo.getSSID());
+        appendLine("IP："+ Utils.int2Ip(wifiInfo.getIpAddress()));
+        appendLine("");
+        if (wifiManager.isWifiEnabled()) {
+            List scanResults = wifiManager.getScanResults();
+            if (scanResults == null || scanResults.size() == 0) {
+                return ;
+            }
+            int i = 0;
+            while (i < scanResults.size() && i < 7) {
+                ScanResult scanResult = (ScanResult)scanResults.get(i);
+                appendLine("BSSID"+"("+scanResult.SSID+")：\n"+scanResult.BSSID);
+                appendLine("");
+                i++;
+            }
+        }
+
     }
 
     private  void printBluetoothInfo(){
@@ -369,10 +385,16 @@ public class MainActivity extends AppCompatActivity {
             appendLine("Cid:" +gsmCellLocation.getCid()+"  Lac:"+gsmCellLocation.getLac());
 
         }
+        //电信CdmaCellLocation
         else if(phoneType == TelephonyManager.PHONE_TYPE_CDMA && cel instanceof CdmaCellLocation){
             CdmaCellLocation cdmaCellLocation = (CdmaCellLocation) cel;
             appendLine("基站Id:"+cdmaCellLocation.getBaseStationId());
+            //此处参考高德地图
+            appendLine("Cid:"+cdmaCellLocation.getSystemId()+" Lac:"+cdmaCellLocation.getNetworkId());
             appendLine("lat:" +cdmaCellLocation.getBaseStationLatitude()+"  long:"+cdmaCellLocation.getBaseStationLongitude());
+        }
+        else{
+            appendLine("SIM卡不可用，CellLocation获取失败");
         }
     }
 
@@ -548,6 +570,9 @@ public class MainActivity extends AppCompatActivity {
         textView.append(text+"\n");
     }
 
+    /**
+     * 7.0以下不被支持
+     */
     private  GnssStatus.Callback gnssCallback=new GnssStatus.Callback() {
         @Override
         public void onStarted() {
@@ -575,7 +600,9 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     };
-
+    /**
+     * 7.0以下不被支持
+     */
     private  OnNmeaMessageListener onNmeaMessageListener=new OnNmeaMessageListener() {
         @Override
         public void onNmeaMessage(String s, long l) {
