@@ -44,6 +44,7 @@ import android.widget.Toast;
 import com.luoye.phoneinfo.activity.GLActivity;
 import com.luoye.phoneinfo.cpu.CpuBridge;
 import com.luoye.phoneinfo.gl.OpenGLRenderer;
+import com.luoye.phoneinfo.util.IOUtils;
 import com.luoye.phoneinfo.util.Utils;
 
 import java.io.BufferedReader;
@@ -276,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
         appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
         appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
         appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
-        appendLine("Build.getRadioVersion(基带版本):"+ Html.fromHtml(Build.getRadioVersion()));
+        appendLine("Build.getRadioVersion(基带版本):"+ Build.getRadioVersion());
         appendLine("getLine1Number:"+ telephonyManager.getLine1Number());
         appendLine("manufacturer(中间层):"+ getNativeProperties("ro.product.manufacturer"));
         appendLine("ro.hardware:"+ Build.HARDWARE);
@@ -403,14 +404,14 @@ public class MainActivity extends AppCompatActivity {
         appendLine("可用:" +getSystemAvailableMemorySize());
         appendLine("最大:" +getSystemTotalMemorySize());
         appendLine("");
-        appendLine(readFile(new File("/proc/meminfo")));
+        appendLine(IOUtils.readFile(new File("/proc/meminfo")));
     }
 
     private  void printCpuInfo(){
         appendLine("---------------CPU--------------");
         appendLine("处理器个数:" +Runtime.getRuntime().availableProcessors());
         appendLine("");
-        appendLine(readFile(new File("/proc/cpuinfo")));
+        appendLine(IOUtils.readFile(new File("/proc/cpuinfo")));
     }
 
     /**
@@ -495,29 +496,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
-    private  String readFile(File f){
-        BufferedReader fileReader=null;
-        StringBuilder stringBuilder=new StringBuilder();
-        try {
-            fileReader=new BufferedReader(new FileReader(f));
-            String line;
-            while ((line=fileReader.readLine())!=null){
-                stringBuilder.append(line+"\n");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally {
-            if(fileReader!=null){
-                try {
-                    fileReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return  stringBuilder.toString();
-    }
+
 
     /**
      * 自定义系统才可以获取到
