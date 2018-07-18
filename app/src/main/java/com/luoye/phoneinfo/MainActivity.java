@@ -16,6 +16,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.GnssStatus;
+import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -38,6 +39,8 @@ import android.util.DisplayMetrics;
 import android.util.Size;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewTreeObserver;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothManager bluetoothManager;
     private CameraManager cameraManager;
     private SensorManager sensorManager;
+    private  NmeaMsgListener nmeaMsgListener;
+    private  NmeaMessageListener nmeaMessageListener;
+    private  GnssStatusCallback gnssStatusCallback;
+    private  ScrollView scrollView;
+    private  int scrollX,scrollY;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
     private  void init(){
         textView = (TextView) findViewById(R.id.tv);
+        scrollView =(ScrollView) findViewById(R.id.scrollView);
         textView.setText("");
         telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         locationManager=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -92,6 +101,16 @@ public class MainActivity extends AppCompatActivity {
         bluetoothManager=(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
         cameraManager=(CameraManager)getSystemService(Context.CAMERA_SERVICE);
         sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
+
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
+            nmeaMsgListener = new NmeaMsgListener();
+            gnssStatusCallback=new GnssStatusCallback();
+        }
+        else{
+            nmeaMessageListener=new NmeaMessageListener();
+        }
+
+
         registerReceiver(new GLBroadcastReceiver(),new IntentFilter(OpenGLRenderer.ACTION_GL_INFO));
         PermissionManager.Builder()
                 .permission(PermissionEnum.READ_PHONE_STATE,PermissionEnum.ACCESS_FINE_LOCATION,PermissionEnum.ACCESS_COARSE_LOCATION,PermissionEnum.WRITE_EXTERNAL_STORAGE)
@@ -110,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .ask(this);
+
     }
 
     private  void printInfo()
@@ -134,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         printSensorInfo();
+
     }
 
     /**
@@ -143,14 +164,12 @@ public class MainActivity extends AppCompatActivity {
         appendLine("---------------Sensor--------------");
         StringBuilder stringBuilder=new StringBuilder();
         List<Sensor> sensorList=sensorManager.getSensorList(SensorManager.SENSOR_STATUS_NO_CONTACT);
+        appendLine("传感器数量："+sensorList.size()+"\n");
         for(int i=0;i<sensorList.size();i++){
             Sensor sensor=sensorList.get(i);
-            if(i!=sensorList.size()-1) {
-                stringBuilder.append(sensor.getName() + "||");
-            }
-            else{
-                stringBuilder.append(sensor.getName());
-            }
+
+                stringBuilder.append("> "+sensor.getName()+"\n");
+
         }
 
         appendLine(stringBuilder.toString());
@@ -206,9 +225,9 @@ public class MainActivity extends AppCompatActivity {
      * 打印屏幕的信息
      */
     private void printScreenInfo(){
-        appendLine("---------------screen--------------");
+        appendLine("---------------Screen--------------");
         DisplayMetrics dm = new DisplayMetrics();
-        this.getWindowManager().getDefaultDisplay().getMetrics(dm);
+        getWindowManager().getDefaultDisplay().getRealMetrics(dm);
         int screenWidth = dm.widthPixels;
         int screenHeight = dm.heightPixels;
         appendLine("分辨率："+screenHeight+","+screenWidth);
@@ -243,17 +262,13 @@ public class MainActivity extends AppCompatActivity {
                 NetworkInterface networkInterface=enumeration.nextElement();
                 byte[] macBytes =networkInterface.getHardwareAddress();
 
-                if(macBytes==null//||!networkInterface.getName().equals("wlan0")
-                        )
+                if(macBytes==null)
                     continue;
                 String mac="";
-                String mb="";
                 for (byte b:macBytes){
-                    mac+=String.format("%2X:",b);
-                    mb+=(b+":");
+                    mac+=String.format("%02X:",b);
                 }
-                textView.append(networkInterface.getName()+"-MAC:"+mac.substring(0,mac.length()-1)+"\n");
-                //textView.append(networkInterface.getName()+"-mb:"+mb+"\n");
+                appendLine(networkInterface.getName()+":"+mac.substring(0,mac.length()-1));
             }
 
         } catch (Exception e) {
@@ -372,12 +387,12 @@ public class MainActivity extends AppCompatActivity {
         appendLine("NetworkCountryIso:" +telephonyManager.getNetworkCountryIso());
         appendLine("NetworkOperator:" +telephonyManager.getNetworkOperator());
         appendLine("NetworkOperatorName:" +telephonyManager.getNetworkOperatorName());
-        appendLine("NetworkType:" +telephonyManager.getNetworkType()+",0(未知)");
+        appendLine("NetworkType:" +telephonyManager.getNetworkType());
         appendLine("DataState:" +telephonyManager.getDataState());
         appendLine("SimCountryIso:" +telephonyManager.getSimCountryIso());
         appendLine("SimOperator:" +telephonyManager.getSimOperator());
         appendLine("SimOperatorName:" +telephonyManager.getSimOperatorName());
-        appendLine("PhoneType:" +telephonyManager.getPhoneType());
+        appendLine("PhoneType:" +(telephonyManager.getPhoneType()==0?"0(CDMA)":"1(GSM)"));
         CellLocation cel = telephonyManager.getCellLocation();
         int phoneType = telephonyManager.getPhoneType();
         //移动联通 GsmCellLocation
@@ -552,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 7.0以下不被支持
      */
-    private  GnssStatus.Callback gnssCallback=new GnssStatus.Callback() {
+    private  class GnssStatusCallback extends GnssStatus.Callback {
         @Override
         public void onStarted() {
             super.onStarted();
@@ -578,16 +593,28 @@ public class MainActivity extends AppCompatActivity {
                     +"\nElevationDegrees(海拔角度):"+status.getElevationDegrees(0)
             );
         }
-    };
+    }
+
     /**
      * 7.0以下不被支持
      */
-    private  OnNmeaMessageListener onNmeaMessageListener=new OnNmeaMessageListener() {
+    private class NmeaMsgListener implements OnNmeaMessageListener{
+
         @Override
-        public void onNmeaMessage(String s, long l) {
-            appendLine(s);
+        public void onNmeaMessage(String message, long timestamp) {
+            appendLine(message);
         }
-    };
+    }
+    /**
+     * 7.0以下使用
+     */
+    private  class NmeaMessageListener implements GpsStatus.NmeaListener{
+
+        @Override
+        public void onNmeaReceived(long timestamp, String nmea) {
+            appendLine(nmea);
+        }
+    }
 
     private LocationListener mLocationListener=new LocationListener() {
         @Override
@@ -617,10 +644,30 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if(locationManager!=null) {
-            locationManager.removeUpdates(mLocationListener);
-            locationManager.removeNmeaListener(onNmeaMessageListener);
-            locationManager.unregisterGnssStatusCallback(gnssCallback);
+            if(mLocationListener!=null) {
+                locationManager.removeUpdates(mLocationListener);
+            }
+            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
+                if(nmeaMsgListener!=null) {
+                    locationManager.removeNmeaListener(nmeaMsgListener);
+                }
+            }
+            else{
+                if(nmeaMessageListener!=null){
+                    locationManager.removeNmeaListener(nmeaMessageListener);
+                }
+            }
+            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
+                if(gnssStatusCallback!=null)
+                    locationManager.unregisterGnssStatusCallback(gnssStatusCallback);
+            }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
     }
 
     @Override
