@@ -45,6 +45,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.luoye.phoneinfo.activity.GLActivity;
+import com.luoye.phoneinfo.activity.GpsActivity;
 import com.luoye.phoneinfo.cpu.CpuBridge;
 import com.luoye.phoneinfo.gl.OpenGLRenderer;
 import com.luoye.phoneinfo.util.IOUtils;
@@ -79,9 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothManager bluetoothManager;
     private CameraManager cameraManager;
     private SensorManager sensorManager;
-    private  NmeaMsgListener nmeaMsgListener;
-    private  NmeaMessageListener nmeaMessageListener;
-    private  GnssStatusCallback gnssStatusCallback;
+
     private  ScrollView scrollView;
     private  int scrollX,scrollY;
     @Override
@@ -101,14 +100,6 @@ public class MainActivity extends AppCompatActivity {
         bluetoothManager=(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
         cameraManager=(CameraManager)getSystemService(Context.CAMERA_SERVICE);
         sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
-
-        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
-            nmeaMsgListener = new NmeaMsgListener();
-            gnssStatusCallback=new GnssStatusCallback();
-        }
-        else{
-            nmeaMessageListener=new NmeaMessageListener();
-        }
 
 
         registerReceiver(new GLBroadcastReceiver(),new IntentFilter(OpenGLRenderer.ACTION_GL_INFO));
@@ -564,57 +555,7 @@ public class MainActivity extends AppCompatActivity {
         textView.append(text+"\n");
     }
 
-    /**
-     * 7.0以下不被支持
-     */
-    private  class GnssStatusCallback extends GnssStatus.Callback {
-        @Override
-        public void onStarted() {
-            super.onStarted();
-        }
 
-        @Override
-        public void onStopped() {
-            super.onStopped();
-        }
-
-        @Override
-        public void onFirstFix(int ttffMillis) {
-            super.onFirstFix(ttffMillis);
-        }
-
-        @Override
-        public void onSatelliteStatusChanged(GnssStatus status) {
-            appendLine("--------卫星实时信息------>");
-            appendLine("卫星数："+status.getSatelliteCount()
-                    +"\nsvid:"+status.getSvid(0)
-                    +"\ncn0s:"+status.getCn0DbHz(0)
-                    +"\nAzimuthDegrees(方位角):"+status.getAzimuthDegrees(0)
-                    +"\nElevationDegrees(海拔角度):"+status.getElevationDegrees(0)
-            );
-        }
-    }
-
-    /**
-     * 7.0以下不被支持
-     */
-    private class NmeaMsgListener implements OnNmeaMessageListener{
-
-        @Override
-        public void onNmeaMessage(String message, long timestamp) {
-            appendLine(message);
-        }
-    }
-    /**
-     * 7.0以下使用
-     */
-    private  class NmeaMessageListener implements GpsStatus.NmeaListener{
-
-        @Override
-        public void onNmeaReceived(long timestamp, String nmea) {
-            appendLine(nmea);
-        }
-    }
 
     private LocationListener mLocationListener=new LocationListener() {
         @Override
@@ -640,27 +581,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
     @Override
     protected void onPause() {
         super.onPause();
-        if(locationManager!=null) {
-            if(mLocationListener!=null) {
-                locationManager.removeUpdates(mLocationListener);
-            }
-            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
-                if(nmeaMsgListener!=null) {
-                    locationManager.removeNmeaListener(nmeaMsgListener);
-                }
-            }
-            else{
-                if(nmeaMessageListener!=null){
-                    locationManager.removeNmeaListener(nmeaMessageListener);
-                }
-            }
-            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
-                if(gnssStatusCallback!=null)
-                    locationManager.unregisterGnssStatusCallback(gnssStatusCallback);
-            }
+        if(mLocationListener!=null) {
+            locationManager.removeUpdates(mLocationListener);
         }
     }
 
@@ -683,6 +609,10 @@ public class MainActivity extends AppCompatActivity {
         }
         else if(item.getItemId()==R.id.opengl){
             Intent intent=new Intent(this, GLActivity.class);
+            startActivity(intent);
+        }
+        else if(item.getItemId()==R.id.gps){
+            Intent intent=new Intent(this, GpsActivity.class);
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);

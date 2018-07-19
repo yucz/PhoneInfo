@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">手机信息</string>
     <string name="open_gl">OpenGL</string>
+    <string name="gps_name">GPS动态信息</string>
 </resources>

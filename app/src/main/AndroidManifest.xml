@@ -26,8 +26,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.GLActivity"
-            android:label="@string/open_gl"
-            >
+            android:label="@string/open_gl">
+
+        </activity>
+        <activity android:name=".activity.GpsActivity"
+            android:label="@string/gps_name">
 
         </activity>
     </application>
