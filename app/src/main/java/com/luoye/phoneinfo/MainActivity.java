@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         printTimeInfo();
         printImeiInfo();
         printMacAddrInfo();
-        printPropInfo();
+        printBasicInfo();
         printWifiInfo();
         printBluetoothInfo();
         printGpsInfo();
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0;i<sensorList.size();i++){
             Sensor sensor=sensorList.get(i);
 
-                stringBuilder.append("> "+sensor.getName()+"\n");
+                stringBuilder.append("> "+sensor.getName()+"("+sensor.getType()+")"+"\n");
 
         }
 
@@ -268,8 +268,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void printPropInfo(){
-        appendLine("---------------Prop--------------");
+    /**
+     * 打印基本信息
+     */
+    private  void printBasicInfo(){
+        appendLine("---------------Build--------------");
         appendLine("ro.build.id:"+ Build.ID);
         appendLine("ro.build.display.id:"+ Build.DISPLAY);
         appendLine("ro.build.fingerprint:"+ Build.FINGERPRINT);
@@ -280,16 +283,19 @@ public class MainActivity extends AppCompatActivity {
         appendLine("ro.product.board:"+ Build.BOARD);
         appendLine("ro.product.model:"+ Build.MODEL);
         appendLine("ro.product.manufacturer:"+ Build.MANUFACTURER);
-        appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
-        appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
-        appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
         appendLine("Build.getRadioVersion(基带版本):"+ Build.getRadioVersion());
-        appendLine("getLine1Number:"+ telephonyManager.getLine1Number());
-        appendLine("manufacturer(中间层):"+ getNativeProperties("ro.product.manufacturer"));
         appendLine("ro.hardware:"+ Build.HARDWARE);
         appendLine("cpu_abi:"+ Build.CPU_ABI);
         appendLine("cpu_abi2:"+ Build.CPU_ABI2);
+        appendLine("---------------Prop Key--------------");
+        appendLine("manufacturer(中间层):"+ getNativeProperties("ro.product.manufacturer"));
         appendLine("ro.board.platform:"+getNativeProperties("ro.board.platform"));
+        appendLine("ro.board.platform:"+getNativeProperties("ro.product.cpu.abi"));
+        appendLine("---------------DeviceInfo--------------");
+        appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
+        appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
+        appendLine("AndroidId:"+ Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
+        appendLine("getLine1Number:"+ telephonyManager.getLine1Number());
     }
 
     private  void printWifiInfo(){
