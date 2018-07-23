@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
@@ -25,6 +26,8 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Environment;
+import android.os.StatFs;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -288,9 +291,9 @@ public class MainActivity extends AppCompatActivity {
         appendLine("cpu_abi:"+ Build.CPU_ABI);
         appendLine("cpu_abi2:"+ Build.CPU_ABI2);
         appendLine("---------------Prop Key--------------");
-        appendLine("manufacturer(中间层):"+ getNativeProperties("ro.product.manufacturer"));
+        appendLine("ro.product.manufacturer:"+ getNativeProperties("ro.product.manufacturer"));
         appendLine("ro.board.platform:"+getNativeProperties("ro.board.platform"));
-        appendLine("ro.board.platform:"+getNativeProperties("ro.product.cpu.abi"));
+        appendLine("ro.product.cpu.abi:"+getNativeProperties("ro.product.cpu.abi"));
         appendLine("---------------DeviceInfo--------------");
         appendLine("getSubscrierId:"+telephonyManager.getSubscriberId());
         appendLine("getSimSerialNumber:"+telephonyManager.getSimSerialNumber());
@@ -412,11 +415,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private  void printMemInfo(){
-        appendLine("---------------内存--------------");
+        appendLine("---------------RAM--------------");
         appendLine("可用:" +getSystemAvailableMemorySize());
         appendLine("最大:" +getSystemTotalMemorySize());
-        appendLine("");
+        appendLine("---------------Storage--------------");
+
+        printStorageSize();
+        appendLine("---------------/proc/meminfo--------------");
         appendLine(IOUtils.readFile(new File("/proc/meminfo")));
+
+
+    }
+
+    /**
+     * 打印内部存储
+     */
+    public  void printStorageSize() {
+        String dataPath = Environment.getDataDirectory().getAbsolutePath();
+        appendLine("路径："+dataPath);
+        StatFs statFs = new StatFs(dataPath);
+        long blockCount=statFs.getBlockCount();
+        long blockSize=statFs.getBlockSize();
+        long storageSize=blockSize*blockCount;
+        long e=(storageSize>>10);
+        int size=(int) (((( e) / 1024.0) / 1024.0) + 0.8);
+        appendLine("BlockSize:"+blockSize);
+        appendLine("BlockCount:"+blockCount);
+        appendLine("内部存储大小："+size+"G");
     }
 
     private  void printCpuInfo(){
@@ -459,6 +484,7 @@ public class MainActivity extends AppCompatActivity {
 
         return availMemStr ;
     }
+
 
     /**
      * 调用系统函数，字符串转换 long -String KB/MB
