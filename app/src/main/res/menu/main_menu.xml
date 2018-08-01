@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/refresh_prop" android:title="更新prop" ></item>
     <item android:id="@+id/refresh" android:title="刷新"></item>
     <item android:id="@+id/opengl" android:title="OpenGL"></item>
     <item android:id="@+id/gps" android:title="GPS动态信息"></item>

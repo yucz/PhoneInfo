@@ -536,29 +536,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * 自定义系统才可以获取到
-     */
-    private void updateProperties() {
-        try {
-            Class clazz=Class.forName("android.os.Build");
-            Method updateProperties=clazz.getDeclaredMethod("updateProperties");
-            updateProperties.invoke(null);
-
-        } catch (ClassNotFoundException e) {
-            System.out.println("找不到类");
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            System.out.println("参数错误");
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            System.out.println("目标错误");
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            System.out.println("找不到方法");
-            e.printStackTrace();
-        }
-    }
 
 
     private  class GLBroadcastReceiver extends BroadcastReceiver {
@@ -631,11 +608,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==R.id.refresh){
-            textView.setText("");
-            printInfo();
-        }
-        else if(item.getItemId()==R.id.refresh_prop){
-            updateProperties();
             textView.setText("");
             printInfo();
         }
