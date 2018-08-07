@@ -32,7 +32,18 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.CellIdentityCdma;
+import android.telephony.CellIdentityGsm;
+import android.telephony.CellIdentityLte;
+import android.telephony.CellIdentityWcdma;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoLte;
+import android.telephony.CellInfoWcdma;
 import android.telephony.CellLocation;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.telephony.gsm.GsmCellLocation;
@@ -64,6 +75,8 @@ import java.net.NetworkInterface;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -128,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
 
     private  void printInfo()
     {
-        printPackageInfo();
         printScreenInfo();
         printTimeInfo();
         printImeiInfo();
@@ -148,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         printSensorInfo();
+        //printPackageName(getApplicationContext());
 
     }
 
@@ -269,7 +282,9 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             textView.append(e.toString());
         }
+
     }
+
 
     /**
      * 打印基本信息
@@ -393,6 +408,7 @@ public class MainActivity extends AppCompatActivity {
         appendLine("SimOperator:" +telephonyManager.getSimOperator());
         appendLine("SimOperatorName:" +telephonyManager.getSimOperatorName());
         appendLine("PhoneType:" +(telephonyManager.getPhoneType()==0?"0(CDMA)":"1(GSM)"));
+
         CellLocation cel = telephonyManager.getCellLocation();
         int phoneType = telephonyManager.getPhoneType();
         //移动联通 GsmCellLocation
@@ -400,17 +416,47 @@ public class MainActivity extends AppCompatActivity {
             GsmCellLocation gsmCellLocation = (GsmCellLocation) cel;
             appendLine("Cid:" +gsmCellLocation.getCid()+"  Lac:"+gsmCellLocation.getLac());
 
+            appendLine("psc:"+gsmCellLocation.getPsc());
+
         }
         //电信CdmaCellLocation
         else if(phoneType == TelephonyManager.PHONE_TYPE_CDMA && cel instanceof CdmaCellLocation){
             CdmaCellLocation cdmaCellLocation = (CdmaCellLocation) cel;
             appendLine("基站Id:"+cdmaCellLocation.getBaseStationId());
             //此处参考高德地图
-            appendLine("Cid:"+cdmaCellLocation.getSystemId()+" Lac:"+cdmaCellLocation.getNetworkId());
+            appendLine("NetworkId(NID|LAC):"+cdmaCellLocation.getNetworkId()+" BaseStationId(BID|CID):"+cdmaCellLocation.getBaseStationId());
             appendLine("lat:" +cdmaCellLocation.getBaseStationLatitude()+"  long:"+cdmaCellLocation.getBaseStationLongitude());
         }
         else{
             appendLine("SIM卡不可用，CellLocation获取失败");
+        }
+
+        List<CellInfo> cellInfos= telephonyManager.getAllCellInfo();
+        if(cellInfos==null||cellInfos.size()>0) {
+            appendLine("【附近基站信息】");
+            for (CellInfo cellInfo : cellInfos) {
+                if(cellInfo instanceof CellInfoGsm){
+                    CellIdentityGsm cellIdentityGsm=((CellInfoGsm) cellInfo).getCellIdentity();
+                    appendLine("GSM--->lac:"+cellIdentityGsm.getLac()+",cid:"+cellIdentityGsm.getCid()+",Mnc:"+cellIdentityGsm.getMnc()+",Mcc"+cellIdentityGsm.getMcc());
+                }
+                else if(cellInfo instanceof CellInfoCdma){
+                    CellIdentityCdma cellIdentityCdma=((CellInfoCdma) cellInfo).getCellIdentity();
+                    //bid相当于cid,nid相当于lac
+                    appendLine("CDMA--->BasestationId(BID|CID):"+cellIdentityCdma.getBasestationId()+",NetworkId(NID|LAC):"+cellIdentityCdma.getNetworkId());
+                }
+                else if(cellInfo instanceof CellInfoLte){
+                    //ci相当于cid,tac相当于lac
+                    CellIdentityLte cellIdentityLte=((CellInfoLte) cellInfo).getCellIdentity();
+                    appendLine("LTE--->ci(CID):"+cellIdentityLte.getCi()+",tac(LAC):"+cellIdentityLte.getTac()+",Mnc:"+cellIdentityLte.getMnc()+",Mcc:"+cellIdentityLte.getMcc());
+                }
+                else if(cellInfo instanceof CellInfoWcdma){
+                    CellIdentityWcdma cellIdentityWcdma =((CellInfoWcdma)cellInfo).getCellIdentity();
+                    appendLine("WCDMA--->cid:"+cellIdentityWcdma.getCid()+",lac:"+cellIdentityWcdma.getLac()+",Mnc:"+cellIdentityWcdma.getMnc()+",Mcc:"+cellIdentityWcdma.getMcc());
+                }
+                else{
+                    appendLine("未知基站--->");
+                }
+            }
         }
     }
 
@@ -425,6 +471,22 @@ public class MainActivity extends AppCompatActivity {
         appendLine(IOUtils.readFile(new File("/proc/meminfo")));
 
 
+    }
+
+    public  void printPackageName(Context context) {
+        appendLine("---------------Packages--------------");
+        int pid = android.os.Process.myPid();
+        PackageManager packageManager=context.getPackageManager();
+        List<PackageInfo> packageInfoList=packageManager.getInstalledPackages(0);
+        Collections.sort(packageInfoList, new Comparator<PackageInfo>() {
+            @Override
+            public int compare(PackageInfo o1, PackageInfo o2) {
+                return o1.packageName.compareToIgnoreCase(o2.packageName);
+            }
+        });
+        for(PackageInfo packageInfo:packageInfoList){
+            appendLine("> "+packageInfo.packageName);
+        }
     }
 
     /**
