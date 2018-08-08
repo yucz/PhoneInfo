@@ -4,4 +4,5 @@
     <item android:id="@+id/refresh" android:title="刷新"></item>
     <item android:id="@+id/opengl" android:title="OpenGL"></item>
     <item android:id="@+id/gps" android:title="GPS动态信息"></item>
+    <item android:id="@+id/export_info" android:title="导出信息"></item>
 </menu>

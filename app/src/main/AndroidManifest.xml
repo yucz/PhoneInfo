@@ -18,7 +18,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,6 +28,9 @@
         </activity>
         <activity android:name=".activity.GLActivity"
             android:label="@string/open_gl">
+
+        </activity>
+        <activity android:name=".activity.InfoActivity">
 
         </activity>
         <activity android:name=".activity.GpsActivity"
