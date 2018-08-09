@@ -9,7 +9,9 @@
         android:layout_height="match_parent">
         <ImageView
             android:layout_width="wrap_content"
-            android:src="@mipmap/xk"
+            android:scaleX="2.0"
+            android:scaleY="2.0"
+            android:src="@mipmap/phone"
             android:layout_height="wrap_content" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
