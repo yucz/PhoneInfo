@@ -1,5 +1,12 @@
 <resources>
     <string name="app_name">手机信息</string>
+    <string name="refresh">刷新</string>
     <string name="open_gl">OpenGL</string>
     <string name="gps_name">GPS动态信息</string>
+    <string name="export_info">导出信息</string>
+    <string name="base_info_export_path_hint">基本信息导出路径</string>
+    <string name="cpu_info_export_path_hint">cpuinfo导出路径</string>
+    <string name="base_info_export_path">/sdcard/xky.prop</string>
+    <string name="cpu_info_export_path">/sdcard/cpuinfo.txt</string>
+
 </resources>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/refresh" android:title="刷新"></item>
-    <item android:id="@+id/opengl" android:title="OpenGL"></item>
-    <item android:id="@+id/gps" android:title="GPS动态信息"></item>
-    <item android:id="@+id/export_info" android:title="导出信息"></item>
+    <item android:id="@+id/refresh" android:title="@string/refresh"></item>
+    <item android:id="@+id/opengl" android:title="@string/open_gl"></item>
+    <item android:id="@+id/gps" android:title="@string/gps_name"></item>
+    <item android:id="@+id/export_info" android:title="@string/export_info"></item>
 </menu>

@@ -27,6 +27,7 @@ import android.os.Environment;
 import android.os.StatFs;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -51,8 +52,10 @@ import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.DisplayMetrics;
 import android.util.Size;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -164,9 +167,9 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     /**
-     * 导出信息
+     * 导出基本信息
      */
-    private  void exportInfo(String file) throws  Exception{
+    private  void exportBaseInfo(String file) throws  Exception{
         JSONObject jsonObject=new JSONObject();
         //基本信息
         JSONObject basicInfo=new JSONObject();
@@ -209,6 +212,12 @@ public class InfoActivity extends AppCompatActivity {
         toast("导出成功");
     }
 
+    private  void exportCpuInfo(String path){
+        File cpuInfoPath=new File("/proc/cpuinfo");
+        File exportPath=new File(path);
+        String cpuinfo=IOUtils.readFile(cpuInfoPath);
+        IOUtils.writeFile(exportPath,cpuinfo);
+    }
 
     private  class GLBroadcastReceiver extends BroadcastReceiver {
         @Override
@@ -278,38 +287,45 @@ public class InfoActivity extends AppCompatActivity {
             startActivity(intent);
         }
         else if(item.getItemId()==R.id.export_info){
-            final EditText editText=new EditText(this);
-            editText.setHint("导出路径");
-            editText.setText("/sdcard/xky.prop");
-            //导出信息
-            new AlertDialog.Builder(this)
-                    .setTitle("导出信息")
-                    .setView(editText)
-                    .setPositiveButton("导出", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            String text=editText.getText().toString();
-                            if(!TextUtils.isEmpty(text)){
-                                try {
-                                    exportInfo(text);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            else{
-                                toast("路径不能留空");
-                            }
-                        }
-                    })
-                    .setNegativeButton("取消",null)
-                    .create()
-
-                    .show();
+            showExportDialog();
         }
         else if(item.getItemId()==android.R.id.home){
             finish();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private  void showExportDialog(){
+        View view=LayoutInflater.from(this).inflate(R.layout.export_dialog,null);
+        final TextInputEditText exportBaseInfoPathView=view.findViewById(R.id.dialog_base_info_tv);
+        final TextInputEditText exportCpuInfoPathView=view.findViewById(R.id.dialog_cpu_info_tv);
+        //导出信息
+        new AlertDialog.Builder(this)
+                .setTitle("导出信息")
+                .setView(view)
+                .setPositiveButton("导出", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        String baseInfoPath=exportBaseInfoPathView.getText().toString();
+                        String cpuInfoPath=exportCpuInfoPathView.getText().toString();
+                        if(!TextUtils.isEmpty(baseInfoPath)&&!TextUtils.isEmpty(cpuInfoPath)){
+                            try {
+                                exportBaseInfo(baseInfoPath);
+                                exportCpuInfo(cpuInfoPath);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        else{
+                            toast("路径都不能留空");
+                            showExportDialog();
+                        }
+                    }
+                })
+                .setNegativeButton("取消",null)
+                .create()
+
+                .show();
     }
 
     @Override

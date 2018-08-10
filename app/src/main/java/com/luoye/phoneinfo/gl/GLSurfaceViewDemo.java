@@ -5,7 +5,7 @@ import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 
 /**
- * Created by xiake on 18-5-17.
+ * Created by zyw on 18-5-17.
  */
 
 public class GLSurfaceViewDemo extends GLSurfaceView {
