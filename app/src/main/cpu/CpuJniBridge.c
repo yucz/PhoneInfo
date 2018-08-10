@@ -50,11 +50,12 @@ Java_com_luoye_phoneinfo_cpu_CpuBridge_getCpuCount(JNIEnv *env, jobject thiz){
     return (jint)android_getCpuCount();
 }
 
-JNIEXPORT jint
+JNIEXPORT jlong
 JNICALL
 Java_com_luoye_phoneinfo_cpu_CpuBridge_getCpuFeatures(JNIEnv *env, jobject thiz){
     uint64_t  val=android_getCpuFeatures();
-    int value=val;
+    //long刚好64位
+    long value=val;
     return  value;
 }
 
