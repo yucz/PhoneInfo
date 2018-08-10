@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
@@ -629,14 +630,29 @@ public class InfoUtils {
     }
 
     /**
+     * 屏幕分辨率方式2
+     * @param windowManager
+     * @return
+     */
+    public static int[] getScreenSize2(WindowManager windowManager){
+        Point point=new Point();
+        windowManager.getDefaultDisplay().getRealSize(point);
+        int screenWidth = point.x;
+        int screenHeight = point.y;
+        return new int[]{screenWidth,screenHeight};
+    }
+
+    /**
      * 屏幕分辨率
      * @param windowManager
      * @return
      */
     public static   String getScreenSizeInfo(WindowManager windowManager){
-        int[] screenSize=getScreenSize(windowManager);
+        int[] screenSize1=getScreenSize(windowManager);
+        int[] screenSize2=getScreenSize2(windowManager);
         StringBuilder stringBuilder=new StringBuilder();
-        stringBuilder.append("分辨率："+screenSize[0]+","+screenSize[1]);
+        stringBuilder.append("分辨率方式1："+screenSize1[0]+","+screenSize1[1]+"\n");
+        stringBuilder.append("分辨率方式2："+screenSize2[0]+","+screenSize2[1]);
         return stringBuilder.toString();
     }
 
