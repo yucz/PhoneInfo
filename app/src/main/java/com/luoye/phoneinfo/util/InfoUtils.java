@@ -370,13 +370,13 @@ public class InfoUtils {
 
         List<CellInfo> cellInfos= telephonyManager.getAllCellInfo();
         if(cellInfos==null||cellInfos.size()>0) {
-            stringBuilder.append("【附近基站信息】");
+            stringBuilder.append("【附近基站信息】\n");
             for (CellInfo cellInfo : cellInfos) {
                 if(cellInfo instanceof CellInfoGsm){
                     CellIdentityGsm cellIdentityGsm=((CellInfoGsm) cellInfo).getCellIdentity();
                     stringBuilder.append("GSM--->lac:"+cellIdentityGsm.getLac()
                             +",cid:"+cellIdentityGsm.getCid()
-                            +",Mnc:"+cellIdentityGsm.getMnc()+",Mcc"+cellIdentityGsm.getMcc());
+                            +",Mnc:"+cellIdentityGsm.getMnc()+",Mcc"+cellIdentityGsm.getMcc()+"\n");
                 }
                 else if(cellInfo instanceof CellInfoCdma){
                     CellIdentityCdma cellIdentityCdma=((CellInfoCdma) cellInfo).getCellIdentity();
@@ -384,7 +384,7 @@ public class InfoUtils {
                     stringBuilder.append("CDMA--->BasestationId(BID|CID):"
                             +cellIdentityCdma.getBasestationId()
                             +",NetworkId(NID|LAC):"
-                            +cellIdentityCdma.getNetworkId());
+                            +cellIdentityCdma.getNetworkId()+"\n");
                 }
                 else if(cellInfo instanceof CellInfoLte){
                     //ci相当于cid,tac相当于lac
@@ -392,14 +392,14 @@ public class InfoUtils {
                     stringBuilder.append("LTE--->ci(CID):"+cellIdentityLte.getCi()+",tac(LAC):"
                             +cellIdentityLte.getTac()
                             +",Mnc:"+cellIdentityLte.getMnc()
-                            +",Mcc:"+cellIdentityLte.getMcc());
+                            +",Mcc:"+cellIdentityLte.getMcc()+"\n");
                 }
                 else if(cellInfo instanceof CellInfoWcdma){
                     CellIdentityWcdma cellIdentityWcdma =((CellInfoWcdma)cellInfo).getCellIdentity();
                     stringBuilder.append("WCDMA--->cid:"+cellIdentityWcdma.getCid()
                             +",lac:"+cellIdentityWcdma.getLac()
                             +",Mnc:"+cellIdentityWcdma.getMnc()
-                            +",Mcc:"+cellIdentityWcdma.getMcc());
+                            +",Mcc:"+cellIdentityWcdma.getMcc()+"\n");
                 }
                 else{
                     stringBuilder.append("未知基站--->"+"\n");
