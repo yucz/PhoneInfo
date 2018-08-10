@@ -102,8 +102,8 @@ public class InfoUtils {
             }
 
         }else{
-            stringBuilder.append("经度(Longitude):"+location.getLongitude());
-            stringBuilder.append("纬度(Latitude):"+location.getLatitude());
+            stringBuilder.append("经度(Longitude):"+location.getLongitude()+"\n");
+            stringBuilder.append("纬度(Latitude):"+location.getLatitude()+"\n");
         }
         return stringBuilder.toString();
     }

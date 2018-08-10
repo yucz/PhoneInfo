@@ -231,7 +231,7 @@ public class InfoActivity extends AppCompatActivity {
         @Override
         public void onLocationChanged(Location location) {
 
-            String loc=location.getLatitude()+","+location.getLongitude();
+            String loc=location.getLatitude()+","+location.getLongitude()+"\n";
             infoItemList.add(new InfoItem("位置", loc));
             adapter.notifyDataSetChanged();
         }
